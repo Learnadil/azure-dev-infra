@@ -5,7 +5,7 @@ pipeline {
         ARM_CLIENT_ID       = credentials('azure-client-id')
         ARM_CLIENT_SECRET   = credentials('azure-client-secret')
         ARM_TENANT_ID       = credentials('azure-tenant-id')
-        ARM_SUBSCRIPTION_ID = '5856180c-0012-4779-83ff-f2ac03dac193'
+        ARM_SUBSCRIPTION_ID = credentials('azure-subscription-id')
     }
 
     stages {
