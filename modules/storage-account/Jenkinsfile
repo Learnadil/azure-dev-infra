@@ -1,11 +1,25 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(
+            name: 'TF_ACTION',
+            choices: ['plan', 'apply', 'destroy', 'refresh-only'],
+            description: 'Choose the Terraform action to run'
+        )
+        booleanParam(
+            name: 'AUTO_APPROVE',
+            defaultValue: false,
+            description: 'Skip manual approval for apply/destroy/refresh-only'
+        )
+    }
+
     environment {
         ARM_CLIENT_ID       = credentials('azure-client-id')
         ARM_CLIENT_SECRET   = credentials('azure-client-secret')
         ARM_TENANT_ID       = credentials('azure-tenant-id')
         ARM_SUBSCRIPTION_ID = credentials('azure-subscription-id')
+        TF_DIR              = 'modules/storage-account'
     }
 
     stages {
@@ -18,28 +32,106 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                dir('modules/storage-account') {
+                dir("${TF_DIR}") {
                     sh 'terraform init'
                 }
             }
         }
 
-        stage('Terraform Plan') {
+        stage('Terraform Validate') {
             steps {
-                dir('modules/storage-account') {
-                    sh 'terraform plan'
+                dir("${TF_DIR}") {
+                    sh 'terraform validate'
                 }
+            }
+        }
+
+        stage('Terraform Plan') {
+            when {
+                expression { params.TF_ACTION == 'plan' || params.TF_ACTION == 'apply' || params.TF_ACTION == 'destroy' }
+            }
+            steps {
+                dir("${TF_DIR}") {
+                    script {
+                        if (params.TF_ACTION == 'plan') {
+                            sh 'terraform plan -out=tfplan'
+                        } else if (params.TF_ACTION == 'apply') {
+                            sh 'terraform plan -out=tfplan'
+                        } else if (params.TF_ACTION == 'destroy') {
+                            sh 'terraform plan -destroy -out=tfdestroyplan'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Refresh Only Plan') {
+            when {
+                expression { params.TF_ACTION == 'refresh-only' }
+            }
+            steps {
+                dir("${TF_DIR}") {
+                    sh 'terraform plan -refresh-only -out=tfrefreshplan'
+                }
+            }
+        }
+
+        stage('Manual Approval') {
+            when {
+                expression {
+                    (params.TF_ACTION == 'apply' || params.TF_ACTION == 'destroy' || params.TF_ACTION == 'refresh-only') &&
+                    !params.AUTO_APPROVE
+                }
+            }
+            steps {
+                input message: "Approve Terraform action: ${params.TF_ACTION}?"
             }
         }
 
         stage('Terraform Apply') {
+            when {
+                expression { params.TF_ACTION == 'apply' }
+            }
             steps {
-                dir('modules/storage-account') {
-                    sh 'terraform apply -auto-approve'
+                dir("${TF_DIR}") {
+                    sh 'terraform apply -auto-approve tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Destroy') {
+            when {
+                expression { params.TF_ACTION == 'destroy' }
+            }
+            steps {
+                dir("${TF_DIR}") {
+                    sh 'terraform apply -auto-approve tfdestroyplan'
+                }
+            }
+        }
+
+        stage('Terraform Refresh Only Apply') {
+            when {
+                expression { params.TF_ACTION == 'refresh-only' }
+            }
+            steps {
+                dir("${TF_DIR}") {
+                    sh 'terraform apply -auto-approve tfrefreshplan'
                 }
             }
         }
     }
+
+    post {
+        always {
+            echo "Pipeline finished. Selected action: ${params.TF_ACTION}"
+        }
+        success {
+            echo 'Terraform execution completed successfully.'
+        }
+        failure {
+            echo 'Terraform execution failed.'
+        }
+    }
 }
 
-#Updated file
