@@ -16,7 +16,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_storage_account" "jkstg" {
-  name                     = "adil-jkstgacc"
+  name                     = "jkstgaccount"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
