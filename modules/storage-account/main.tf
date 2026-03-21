@@ -17,6 +17,12 @@ provider "azurerm" {
   features {}
 }
 
+variable "environment" {
+  #description = "The environment to deploy to"
+  type = string
+  default = "dev"  
+}
+
 resource "azurerm_resource_group" "rg" {
   name = "rg-terraform"
   location = "eastus"   
