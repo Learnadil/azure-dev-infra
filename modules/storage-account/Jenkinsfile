@@ -38,6 +38,13 @@ pipeline {
             }
         }
 
+	stage('Terraform Fmt') {
+    	steps {
+        dir("${TF_DIR}") {
+            sh 'terraform fmt -check -recursive'
+        }
+    }
+}
         stage('Terraform Validate') {
             steps {
                 dir("${TF_DIR}") {
