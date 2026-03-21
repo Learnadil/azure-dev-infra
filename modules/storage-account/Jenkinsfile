@@ -33,7 +33,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 dir("${TF_DIR}") {
-                    sh 'terraform init -migrate-state'
+                    sh 'terraform init -input=false -force-copy'
                 }
             }
         }
