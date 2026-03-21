@@ -4,7 +4,6 @@ terraform {
         source = "hashicorp/azurerm"
     }
   }
-}
 
   backend "azurerm" {
     resource_group_name = "rg-terraform"
@@ -12,6 +11,7 @@ terraform {
     container_name = "jktf-dev-backend"
     key = "dev-terraform.tfstate"
   }
+}
 
 provider "azurerm" {
   features {}
