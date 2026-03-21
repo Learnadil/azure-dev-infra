@@ -4,13 +4,6 @@ terraform {
         source = "hashicorp/azurerm"
     }
   }
-
-  backend "azurerm" {
-    resource_group_name = "azurerm_resource_group.rg.name"
-    storage_account_name = "azurerm_storage_account.jkstg.name"
-    container_name = "jktf-dev-backend"
-    key = "dev-terraform.tfstate"
-  }
 }
 
 provider "azurerm" {
@@ -22,6 +15,12 @@ resource "azurerm_resource_group" "rg" {
   location = "eastus"   
 }
 
+  backend "azurerm" {
+    resource_group_name = "azurerm_resource_group.rg.name"
+    storage_account_name = "azurerm_storage_account.jkstg.name"
+    container_name = "jktf-dev-backend"
+    key = "dev-terraform.tfstate"
+  }
 resource "azurerm_storage_account" "jkstg" {
   name                     = "jkstgaccount"
   resource_group_name      = azurerm_resource_group.rg.name
