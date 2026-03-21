@@ -35,3 +35,7 @@ resource "azurerm_storage_account" "jkstg" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
+
+tags = {
+  environment = var.environment
+}
